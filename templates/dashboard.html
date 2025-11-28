@@ -7,7 +7,10 @@
       <h2>{{ user.full_name }}</h2>
       <p class="muted">{{ user.email }}</p>
     </div>
-    <span class="badge">Pro User</span>
+    <div>
+      <span class="badge">{% if user.is_admin %}Admin{% else %}User{% endif %}</span>
+      <button onclick="logout()" class="btn secondary" style="margin-left: 0.5rem;">Logout</button>
+    </div>
   </div>
   <div class="stats">
     <article>
@@ -18,14 +21,252 @@
       <p class="label">Storage Used</p>
       <h3>{{ '%.2f' | format(user.total_bytes / (1024*1024)) }} MB</h3>
     </article>
+    {% if user.is_admin %}
     <article>
-      <p class="label">Next Action</p>
-      <h3>POST /files/upload</h3>
+      <a href="/admin-panel" class="btn secondary">Admin Panel</a>
     </article>
+    {% endif %}
   </div>
-  <p class="muted">
-    Tip: Use Swagger to upload files, then visit /files/{id}/share to send an expiring link to classmates.
-  </p>
 </section>
-{% endblock %}
 
+<section class="glass-panel">
+  <h3>Upload File</h3>
+  <form id="uploadForm" class="upload-form">
+    <div class="file-input-wrapper">
+      <input type="file" id="fileInput" name="upload" required />
+      <label for="fileInput" class="file-label">
+        <span id="fileName">Choose a file...</span>
+        <span class="btn secondary">Browse</span>
+      </label>
+    </div>
+    <div id="uploadError" class="error-message" style="display: none;"></div>
+    <div id="uploadProgress" style="display: none;">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <p class="muted" id="progressText">Uploading...</p>
+    </div>
+    <button type="submit" class="btn primary" id="uploadBtn">Upload File</button>
+  </form>
+</section>
+
+<section class="glass-panel">
+  <h3>My Files</h3>
+  <div id="filesList">
+    <p class="muted">Loading files...</p>
+  </div>
+</section>
+
+<div id="shareModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeShareModal()">&times;</span>
+    <h3>Share Link</h3>
+    <p class="muted">This link will expire in 30 minutes</p>
+    <div class="share-link-box">
+      <input type="text" id="shareLinkInput" readonly />
+      <button onclick="copyShareLink()" class="btn primary">Copy</button>
+    </div>
+    <p id="copyStatus" class="success-message" style="display: none;">Link copied!</p>
+  </div>
+</div>
+
+<script>
+function getToken() {
+  return localStorage.getItem('access_token') || 
+         document.cookie.split('; ').find(row => row.startsWith('access_token='))?.split('=')[1] || 
+         '';
+}
+
+function logout() {
+  localStorage.removeItem('access_token');
+  document.cookie = 'access_token=; path=/; max-age=0';
+  window.location.href = '/login';
+}
+
+// File input display
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const fileName = e.target.files[0]?.name || 'Choose a file...';
+  document.getElementById('fileName').textContent = fileName;
+});
+
+// Upload form
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    showError('uploadError', 'Please select a file');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('upload', file);
+  
+  const errorDiv = document.getElementById('uploadError');
+  const progressDiv = document.getElementById('uploadProgress');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const uploadBtn = document.getElementById('uploadBtn');
+  
+  errorDiv.style.display = 'none';
+  progressDiv.style.display = 'block';
+  uploadBtn.disabled = true;
+  progressFill.style.width = '0%';
+  
+  try {
+    const token = getToken();
+    const response = await fetch('/files/upload', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Upload failed');
+    }
+    
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Upload complete!';
+    
+    // Reset form and reload files
+    fileInput.value = '';
+    document.getElementById('fileName').textContent = 'Choose a file...';
+    setTimeout(() => {
+      progressDiv.style.display = 'none';
+      uploadBtn.disabled = false;
+      loadFiles();
+    }, 1000);
+  } catch (error) {
+    progressDiv.style.display = 'none';
+    uploadBtn.disabled = false;
+    showError('uploadError', error.message);
+  }
+});
+
+function showError(elementId, message) {
+  const errorDiv = document.getElementById(elementId);
+  errorDiv.textContent = message;
+  errorDiv.style.display = 'block';
+}
+
+// Load files list
+async function loadFiles() {
+  const filesList = document.getElementById('filesList');
+  filesList.innerHTML = '<p class="muted">Loading files...</p>';
+  
+  try {
+    const token = getToken();
+    const response = await fetch('/files/', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to load files');
+    }
+    
+    const files = await response.json();
+    
+    if (files.length === 0) {
+      filesList.innerHTML = '<p class="muted">No files uploaded yet. Upload your first file above!</p>';
+      return;
+    }
+    
+    filesList.innerHTML = files.map(file => `
+      <div class="file-item">
+        <div class="file-info">
+          <strong>${escapeHtml(file.filename)}</strong>
+          <p class="muted">${formatBytes(file.size)} · ${formatDate(file.uploaded_at)}</p>
+        </div>
+        <div class="file-actions">
+          <button onclick="downloadFile(${file.id})" class="btn secondary small">Download</button>
+          <button onclick="shareFile(${file.id})" class="btn primary small">Share</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    filesList.innerHTML = `<p class="error-message">Error loading files: ${error.message}</p>`;
+  }
+}
+
+async function downloadFile(fileId) {
+  try {
+    const token = getToken();
+    const response = await fetch(`/files/${fileId}/download`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get download link');
+    }
+    
+    const data = await response.json();
+    window.open(data.url, '_blank');
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+async function shareFile(fileId) {
+  try {
+    const token = getToken();
+    const response = await fetch(`/files/${fileId}/share?minutes=30`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to create share link');
+    }
+    
+    const data = await response.json();
+    const shareUrl = `${window.location.origin}/shared/${data.token}`;
+    
+    document.getElementById('shareLinkInput').value = shareUrl;
+    document.getElementById('shareModal').style.display = 'flex';
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+function closeShareModal() {
+  document.getElementById('shareModal').style.display = 'none';
+  document.getElementById('copyStatus').style.display = 'none';
+}
+
+function copyShareLink() {
+  const input = document.getElementById('shareLinkInput');
+  input.select();
+  document.execCommand('copy');
+  
+  const status = document.getElementById('copyStatus');
+  status.style.display = 'block';
+  setTimeout(() => {
+    status.style.display = 'none';
+  }, 2000);
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Load files on page load
+loadFiles();
+</script>
+{% endblock %}

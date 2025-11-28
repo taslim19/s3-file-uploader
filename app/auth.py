@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -52,8 +52,23 @@ def authenticate_user(db: Session, email: str, password: str) -> models.User | N
     return user
 
 
+async def get_token_from_request(request: Request) -> str | None:
+    """Extract token from Bearer header or cookie"""
+    # Try Bearer token first
+    authorization = request.headers.get("Authorization")
+    if authorization and authorization.startswith("Bearer "):
+        return authorization.split(" ")[1]
+    
+    # Try cookie
+    token = request.cookies.get("access_token")
+    if token:
+        return token
+    
+    return None
+
+
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
     db: Annotated[Session, Depends(get_db)],
 ) -> models.User:
     credentials_exception = HTTPException(
@@ -61,6 +76,11 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    token = await get_token_from_request(request)
+    if not token:
+        raise credentials_exception
+    
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
         email: str | None = payload.get("sub")

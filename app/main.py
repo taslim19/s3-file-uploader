@@ -44,6 +44,21 @@ def dashboard(
     )
 
 
+@app.get("/register", response_class=HTMLResponse)
+def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.get("/shared/{token}", response_class=HTMLResponse)
+def shared_link_page(request: Request, token: str):
+    return templates.TemplateResponse("shared.html", {"request": request, "token": token})
+
+
 @app.get("/admin-panel", response_class=HTMLResponse)
 def admin_panel(request: Request):
     return templates.TemplateResponse("admin.html", {"request": request})

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="auth-container">
+  <div class="glass-panel auth-panel">
+    <h2>Login</h2>
+    <p class="muted">Access your cloud storage</p>
+    
+    {% if request.query_params.get('registered') %}
+    <div class="success-message">
+      Account created successfully! Please login.
+    </div>
+    {% endif %}
+    
+    <form id="loginForm" class="auth-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email" />
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password" />
+      </div>
+      
+      <div id="errorMsg" class="error-message" style="display: none;"></div>
+      
+      <button type="submit" class="btn primary full-width">Login</button>
+    </form>
+    
+    <p class="auth-footer">
+      Don't have an account? <a href="/register">Register here</a>
+    </p>
+  </div>
+</section>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errorMsg = document.getElementById('errorMsg');
+  errorMsg.style.display = 'none';
+  
+  const formData = new URLSearchParams();
+  formData.append('username', document.getElementById('email').value);
+  formData.append('password', document.getElementById('password').value);
+  
+  try {
+    const response = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Login failed');
+    }
+    
+    const data = await response.json();
+    
+    // Store token in localStorage and cookie
+    localStorage.setItem('access_token', data.access_token);
+    document.cookie = `access_token=${data.access_token}; path=/; max-age=86400; SameSite=Lax`;
+    
+    // Redirect to dashboard
+    window.location.href = '/dashboard';
+  } catch (error) {
+    errorMsg.textContent = error.message;
+    errorMsg.style.display = 'block';
+  }
+});
+</script>
+{% endblock %}
+

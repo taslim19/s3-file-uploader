@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="auth-container">
+  <div class="glass-panel auth-panel">
+    <h2>Create Account</h2>
+    <p class="muted">Join Mini Cloud Drive to start storing your files</p>
+    
+    <form id="registerForm" class="auth-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email" />
+      </div>
+      
+      <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name" required autocomplete="name" />
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="new-password" />
+      </div>
+      
+      <div id="errorMsg" class="error-message" style="display: none;"></div>
+      
+      <button type="submit" class="btn primary full-width">Create Account</button>
+    </form>
+    
+    <p class="auth-footer">
+      Already have an account? <a href="/login">Login here</a>
+    </p>
+  </div>
+</section>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errorMsg = document.getElementById('errorMsg');
+  errorMsg.style.display = 'none';
+  
+  const formData = {
+    email: document.getElementById('email').value,
+    full_name: document.getElementById('full_name').value,
+    password: document.getElementById('password').value
+  };
+  
+  try {
+    const response = await fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Registration failed');
+    }
+    
+    // Redirect to login after successful registration
+    window.location.href = '/login?registered=true';
+  } catch (error) {
+    errorMsg.textContent = error.message;
+    errorMsg.style.display = 'block';
+  }
+});
+</script>
+{% endblock %}
+

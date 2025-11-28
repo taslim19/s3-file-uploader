@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="auth-container">
+  <div class="glass-panel auth-panel">
+    <h2>Shared File</h2>
+    <div id="fileInfo">
+      <p class="muted">Loading file information...</p>
+    </div>
+    <div id="errorMsg" class="error-message" style="display: none;"></div>
+    <button id="downloadBtn" class="btn primary full-width" style="display: none;" onclick="downloadSharedFile()">
+      Download File
+    </button>
+  </div>
+</section>
+
+<script>
+const token = '{{ token }}';
+let downloadUrl = '';
+
+async function loadSharedFile() {
+  try {
+    const response = await fetch(`/files/shared/${token}`);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to load file');
+    }
+    
+    const data = await response.json();
+    downloadUrl = data.url;
+    
+    document.getElementById('fileInfo').innerHTML = `
+      <h3>${escapeHtml(data.filename)}</h3>
+      <p class="muted">Click the button below to download</p>
+    `;
+    document.getElementById('downloadBtn').style.display = 'block';
+  } catch (error) {
+    document.getElementById('errorMsg').textContent = error.message;
+    document.getElementById('errorMsg').style.display = 'block';
+  }
+}
+
+function downloadSharedFile() {
+  if (downloadUrl) {
+    window.open(downloadUrl, '_blank');
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+loadSharedFile();
+</script>
+{% endblock %}
+

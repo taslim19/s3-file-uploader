@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -33,13 +34,31 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)) -> models.
     return user
 
 
-@router.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> Token:
+@router.post("/login")
+def login(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
     token = create_access_token(subject=user.email)
-    return Token(access_token=token)
+    
+    # Create response with token
+    response = JSONResponse(content={"access_token": token, "token_type": "bearer"})
+    
+    # Set cookie for web interface
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        max_age=86400,  # 24 hours
+        httponly=False,  # Allow JS access for localStorage fallback
+        samesite="lax",
+        secure=False,  # Set to True in production with HTTPS
+    )
+    
+    return response
 
 
 @router.get("/me", response_model=UserRead)
