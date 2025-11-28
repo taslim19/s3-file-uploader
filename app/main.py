@@ -1,5 +1,5 @@
 from fastapi import Depends, FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -62,4 +62,13 @@ def shared_link_page(request: Request, token: str):
 @app.get("/admin-panel", response_class=HTMLResponse)
 def admin_panel(request: Request):
     return templates.TemplateResponse("admin.html", {"request": request})
+
+
+@app.get("/favicon.ico")
+def favicon():
+    # Return a simple 1x1 transparent PNG to avoid 404 errors
+    return Response(
+        content=b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82',
+        media_type="image/png"
+    )
 

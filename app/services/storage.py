@@ -44,3 +44,6 @@ class S3StorageService:
             ExpiresIn=expires_in,
         )
 
+    def delete(self, key: str) -> None:
+        self.client.delete_object(Bucket=self.bucket, Key=key)
+

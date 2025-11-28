@@ -101,6 +101,35 @@ def create_share_link(
     return share
 
 
+@router.delete("/{file_id}")
+def delete_file(
+    file_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+    storage: S3StorageService = Depends(get_storage_service),
+) -> dict:
+    file_obj = db.get(models.FileAsset, file_id)
+    if not file_obj or (file_obj.owner_id != current_user.id and not current_user.is_admin):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Delete from S3
+    try:
+        storage.delete(file_obj.s3_key)
+    except Exception:
+        pass  # Continue even if S3 delete fails
+    
+    # Update user stats
+    current_user.total_bytes -= file_obj.size
+    current_user.file_count -= 1
+    
+    # Delete file record
+    db.delete(file_obj)
+    db.add(current_user)
+    db.commit()
+    
+    return {"message": "File deleted successfully"}
+
+
 @router.get("/shared/{token}")
 def use_share_link(
     token: str,

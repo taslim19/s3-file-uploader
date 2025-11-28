@@ -378,8 +378,37 @@ textarea {
   margin-top: 1rem;
 }
 
+.drag-drop-area {
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  text-align: center;
+  transition: all 0.3s;
+  background: rgba(0, 0, 0, 0.2);
+  margin-bottom: 1rem;
+}
+
+.drag-drop-area.drag-over {
+  border-color: var(--accent);
+  background: rgba(124, 93, 255, 0.1);
+  transform: scale(1.02);
+}
+
+.drag-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.drag-drop-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
 .file-input-wrapper {
   position: relative;
+  margin-top: 0.5rem;
 }
 
 .file-input-wrapper input[type="file"] {
@@ -469,6 +498,16 @@ textarea {
 
 .btn.ghost:hover {
   background: rgba(255, 255, 255, 0.05);
+}
+
+.btn.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+}
+
+.btn.danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
 }
 
 /* Modal */

@@ -32,12 +32,19 @@
 <section class="glass-panel">
   <h3>Upload File</h3>
   <form id="uploadForm" class="upload-form">
-    <div class="file-input-wrapper">
-      <input type="file" id="fileInput" name="upload" required />
-      <label for="fileInput" class="file-label">
-        <span id="fileName">Choose a file...</span>
-        <span class="btn secondary">Browse</span>
-      </label>
+    <div class="drag-drop-area" id="dragDropArea">
+      <div class="drag-drop-content">
+        <p class="drag-drop-icon">📁</p>
+        <p><strong>Drag and drop files here</strong></p>
+        <p class="muted">or</p>
+        <div class="file-input-wrapper">
+          <input type="file" id="fileInput" name="upload" required />
+          <label for="fileInput" class="file-label">
+            <span id="fileName">Choose a file...</span>
+            <span class="btn secondary">Browse</span>
+          </label>
+        </div>
+      </div>
     </div>
     <div id="uploadError" class="error-message" style="display: none;"></div>
     <div id="uploadProgress" style="display: none;">
@@ -61,12 +68,20 @@
   <div class="modal-content">
     <span class="modal-close" onclick="closeShareModal()">&times;</span>
     <h3>Share Link</h3>
-    <p class="muted">This link will expire in 30 minutes</p>
-    <div class="share-link-box">
-      <input type="text" id="shareLinkInput" readonly />
-      <button onclick="copyShareLink()" class="btn primary">Copy</button>
+    <div class="form-group" style="margin: 1rem 0;">
+      <label for="expiryMinutes">Expiry Time (minutes)</label>
+      <input type="number" id="expiryMinutes" min="1" max="10080" value="30" style="width: 100%; padding: 0.8rem; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text);" />
+      <p class="muted" style="font-size: 0.85rem; margin-top: 0.3rem;">Link will expire after the specified time (max 7 days = 10080 minutes)</p>
     </div>
-    <p id="copyStatus" class="success-message" style="display: none;">Link copied!</p>
+    <button onclick="createShareLink()" class="btn primary full-width" style="margin-bottom: 1rem;">Generate Share Link</button>
+    <div id="shareLinkSection" style="display: none;">
+      <p class="muted" id="expiryInfo"></p>
+      <div class="share-link-box">
+        <input type="text" id="shareLinkInput" readonly />
+        <button onclick="copyShareLink()" class="btn primary">Copy</button>
+      </div>
+      <p id="copyStatus" class="success-message" style="display: none;">Link copied!</p>
+    </div>
   </div>
 </div>
 
@@ -83,8 +98,45 @@ function logout() {
   window.location.href = '/login';
 }
 
+// Drag and drop functionality
+const dragDropArea = document.getElementById('dragDropArea');
+const fileInput = document.getElementById('fileInput');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  dragDropArea.addEventListener(eventName, preventDefaults, false);
+  document.body.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+  dragDropArea.addEventListener(eventName, () => {
+    dragDropArea.classList.add('drag-over');
+  }, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+  dragDropArea.addEventListener(eventName, () => {
+    dragDropArea.classList.remove('drag-over');
+  }, false);
+});
+
+dragDropArea.addEventListener('drop', (e) => {
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  
+  if (files.length > 0) {
+    fileInput.files = files;
+    const fileName = files[0].name;
+    document.getElementById('fileName').textContent = fileName;
+  }
+}, false);
+
 // File input display
-document.getElementById('fileInput').addEventListener('change', (e) => {
+fileInput.addEventListener('change', (e) => {
   const fileName = e.target.files[0]?.name || 'Choose a file...';
   document.getElementById('fileName').textContent = fileName;
 });
@@ -182,6 +234,7 @@ async function loadFiles() {
         <div class="file-actions">
           <button onclick="downloadFile(${file.id})" class="btn secondary small">Download</button>
           <button onclick="shareFile(${file.id})" class="btn primary small">Share</button>
+          <button onclick="deleteFile(${file.id}, '${escapeHtml(file.filename)}')" class="btn danger small">Delete</button>
         </div>
       </div>
     `).join('');
@@ -208,23 +261,69 @@ async function downloadFile(fileId) {
   }
 }
 
-async function shareFile(fileId) {
+let currentShareFileId = null;
+
+function shareFile(fileId) {
+  currentShareFileId = fileId;
+  document.getElementById('shareModal').style.display = 'flex';
+  document.getElementById('shareLinkSection').style.display = 'none';
+  document.getElementById('expiryMinutes').value = '30';
+}
+
+async function createShareLink() {
+  if (!currentShareFileId) return;
+  
+  const minutes = parseInt(document.getElementById('expiryMinutes').value) || 30;
+  
+  if (minutes < 1 || minutes > 10080) {
+    alert('Expiry time must be between 1 and 10080 minutes (7 days)');
+    return;
+  }
+  
   try {
     const token = getToken();
-    const response = await fetch(`/files/${fileId}/share?minutes=30`, {
+    const response = await fetch(`/files/${currentShareFileId}/share?minutes=${minutes}`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
     if (!response.ok) {
-      throw new Error('Failed to create share link');
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to create share link');
     }
     
     const data = await response.json();
     const shareUrl = `${window.location.origin}/shared/${data.token}`;
     
     document.getElementById('shareLinkInput').value = shareUrl;
-    document.getElementById('shareModal').style.display = 'flex';
+    document.getElementById('shareLinkSection').style.display = 'block';
+    
+    const expiryDate = new Date(data.expires_at);
+    document.getElementById('expiryInfo').textContent = `Link expires on ${expiryDate.toLocaleString()}`;
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+async function deleteFile(fileId, filename) {
+  if (!confirm(`Are you sure you want to delete "${filename}"? This action cannot be undone.`)) {
+    return;
+  }
+  
+  try {
+    const token = getToken();
+    const response = await fetch(`/files/${fileId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to delete file');
+    }
+    
+    // Reload files list
+    loadFiles();
   } catch (error) {
     alert('Error: ' + error.message);
   }
@@ -233,6 +332,8 @@ async function shareFile(fileId) {
 function closeShareModal() {
   document.getElementById('shareModal').style.display = 'none';
   document.getElementById('copyStatus').style.display = 'none';
+  document.getElementById('shareLinkSection').style.display = 'none';
+  currentShareFileId = null;
 }
 
 function copyShareLink() {
