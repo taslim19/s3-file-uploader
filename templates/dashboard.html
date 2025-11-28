@@ -1,15 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="card">
-  <h2>Dashboard</h2>
-  <p>Hello {{ user.full_name }} ({{ user.email }})</p>
-  <p>
-    Files: <strong>{{ user.file_count }}</strong> —
-    Stored: <strong>{{ '%.2f' | format(user.total_bytes / (1024*1024)) }} MB</strong>
-  </p>
-  <p>
-    Use the REST endpoints to upload, download, and share files. This page is
-    rendered only to prove session-protected templates.
+<section class="glass-panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Signed in as</p>
+      <h2>{{ user.full_name }}</h2>
+      <p class="muted">{{ user.email }}</p>
+    </div>
+    <span class="badge">Pro User</span>
+  </div>
+  <div class="stats">
+    <article>
+      <p class="label">Total Files</p>
+      <h3>{{ user.file_count }}</h3>
+    </article>
+    <article>
+      <p class="label">Storage Used</p>
+      <h3>{{ '%.2f' | format(user.total_bytes / (1024*1024)) }} MB</h3>
+    </article>
+    <article>
+      <p class="label">Next Action</p>
+      <h3>POST /files/upload</h3>
+    </article>
+  </div>
+  <p class="muted">
+    Tip: Use Swagger to upload files, then visit /files/{id}/share to send an expiring link to classmates.
   </p>
 </section>
 {% endblock %}

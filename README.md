@@ -24,13 +24,13 @@ uvicorn app.main:app --reload
 Set these keys in `.env` (or environment variables):
 
 ```
-DATABASE_URL=sqlite:///./cloud_drive.db
-SECRET_KEY=super-secret-change-me
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
-AWS_REGION=ap-south-1
-S3_BUCKET_NAME=mini-drive-bucket
+    DATABASE_URL=sqlite:///./cloud_drive.db
+    SECRET_KEY=super-secret-change-me
+    ACCESS_TOKEN_EXPIRE_MINUTES=60
+    AWS_ACCESS_KEY_ID=...
+    AWS_SECRET_ACCESS_KEY=...
+    AWS_REGION=ap-south-1
+    S3_BUCKET_NAME=mini-drive-bucket
 ```
 
 ### Tech Stack

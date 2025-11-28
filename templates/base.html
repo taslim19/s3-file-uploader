@@ -2,23 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ title if title else "Mini Cloud Drive" }}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}" />
   </head>
-  <body>
-    <header>
-      <h1>Mini Cloud Drive</h1>
+  <body class="app-body">
+    <div class="orb orb-left"></div>
+    <div class="orb orb-right"></div>
+    <header class="shell">
+      <div class="brand">
+        <span class="dot"></span>
+        <div>
+          <p class="eyebrow">Mini Cloud Drive</p>
+          <h1>Secure file hub for campus demos</h1>
+        </div>
+      </div>
       <nav>
         <a href="/">Home</a>
-        <a href="/docs" target="_blank">API Docs</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/admin-panel">Admin</a>
+        <a class="ghost" href="/docs" target="_blank">API Docs ↗</a>
       </nav>
     </header>
-    <main>
+    <main class="shell">
       {% block content %}{% endblock %}
     </main>
-    <footer>
-      Built with FastAPI + AWS S3 + SQLite.
+    <footer class="shell footer">
+      <p>FastAPI · AWS S3 · SQLite · JWT</p>
+      <p>&copy; 2025 Mini Cloud Drive</p>
     </footer>
   </body>
 </html>

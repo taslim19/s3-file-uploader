@@ -1,29 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="card">
-  <h2>Welcome</h2>
-  <p>
-    This mini project behaves like a lightweight Google Drive built for BSc CS
-    demonstrations. Use the auto-generated Swagger UI to try every endpoint,
-    or plug the API into a React/Flutter client.
-  </p>
-  <ul>
-    <li>Register a user via <code>/auth/register</code></li>
-    <li>Log in with OAuth2 password flow at <code>/auth/login</code></li>
-    <li>Hit <code>/files/upload</code> with a multipart file to push into S3</li>
-    <li>Create expiring public links with <code>/files/{id}/share</code></li>
-    <li>Inspect overall usage at <code>/admin/summary</code> (admin only)</li>
-  </ul>
+<section class="hero">
+  <div>
+    <p class="eyebrow accent">BSc CS Mini Project</p>
+    <h2>Cloud storage with Netflix-dark aesthetics</h2>
+    <p>
+      Upload, share, and monitor files using FastAPI + AWS S3. Built to impress
+      examiners with both real infrastructure and a cinematic UI.
+    </p>
+    <div class="cta-row">
+      <a class="btn primary" href="/docs" target="_blank">Explore API</a>
+      <a class="btn secondary" href="/dashboard">Open Dashboard</a>
+    </div>
+  </div>
+  <div class="hero-terminal">
+    <p>$ curl -X POST /auth/login</p>
+    <p>{ "access_token": "•••", "token_type": "bearer" }</p>
+    <hr />
+    <p>$ curl -X POST /files/upload</p>
+    <p>{"file":"thesis.pdf","s3_key":"uploads/92ab..."}</p>
+  </div>
 </section>
-<section class="grid">
+
+<section class="feature-grid">
   <article>
-    <h3>Stack</h3>
-    <p>FastAPI · SQLAlchemy · AWS S3 · JWT Security</p>
+    <h3>01 · Secure Auth</h3>
+    <p>JWT login, hashed passwords, role-based admin access.</p>
   </article>
   <article>
-    <h3>Highlight</h3>
-    <p>Uses real S3 presigned URLs so shared links naturally expire server-side.</p>
+    <h3>02 · Cloud Storage</h3>
+    <p>Uploads stream directly into AWS S3 with presigned downloads.</p>
   </article>
+  <article>
+    <h3>03 · Expiring Links</h3>
+    <p>Sharable URLs auto-expire via S3 signatures to keep data private.</p>
+  </article>
+  <article>
+    <h3>04 · Insights</h3>
+    <p>Admin panel surfaces total bytes, uploads, and power users.</p>
+  </article>
+</section>
+
+<section class="pill">
+  <p>
+    Stack: FastAPI · SQLAlchemy · boto3 · SQLite · Tailored dark UI with pure CSS
+  </p>
 </section>
 {% endblock %}
 
