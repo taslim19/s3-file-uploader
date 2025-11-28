@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Welcome</h2>
+  <p>
+    This mini project behaves like a lightweight Google Drive built for BSc CS
+    demonstrations. Use the auto-generated Swagger UI to try every endpoint,
+    or plug the API into a React/Flutter client.
+  </p>
+  <ul>
+    <li>Register a user via <code>/auth/register</code></li>
+    <li>Log in with OAuth2 password flow at <code>/auth/login</code></li>
+    <li>Hit <code>/files/upload</code> with a multipart file to push into S3</li>
+    <li>Create expiring public links with <code>/files/{id}/share</code></li>
+    <li>Inspect overall usage at <code>/admin/summary</code> (admin only)</li>
+  </ul>
+</section>
+<section class="grid">
+  <article>
+    <h3>Stack</h3>
+    <p>FastAPI · SQLAlchemy · AWS S3 · JWT Security</p>
+  </article>
+  <article>
+    <h3>Highlight</h3>
+    <p>Uses real S3 presigned URLs so shared links naturally expire server-side.</p>
+  </article>
+</section>
+{% endblock %}
+

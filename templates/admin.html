@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Admin Monitor</h2>
+  <p>Paste an admin JWT below to fetch live stats.</p>
+  <label for="token">Bearer token</label>
+  <textarea id="token" rows="3" style="width: 100%"></textarea>
+  <button id="load">Load Summary</button>
+</section>
+<section class="card" id="output"></section>
+<script>
+  const loadBtn = document.getElementById("load");
+  const out = document.getElementById("output");
+  loadBtn.addEventListener("click", async () => {
+    out.innerHTML = "Loading...";
+    const token = document.getElementById("token").value.trim();
+    const resp = await fetch("/admin/summary", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) {
+      out.innerHTML = `Error: ${resp.status} ${resp.statusText}`;
+      return;
+    }
+    const data = await resp.json();
+    out.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  });
+</script>
+{% endblock %}
+
