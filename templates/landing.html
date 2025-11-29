@@ -1,51 +1,123 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero">
-  <div>
-    <p class="eyebrow accent">BSc CS Mini Project</p>
-    <h2>Cloud storage with Netflix-dark aesthetics</h2>
-    <p>
-      Upload, share, and monitor files using FastAPI + AWS S3. Built to impress
-      examiners with both real infrastructure and a cinematic UI.
+<section class="hero-enhanced">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="pulse-dot"></span>
+      <span>BSc CS Mini Project</span>
+    </div>
+    <h1 class="hero-headline">
+      Cloud storage that <span class="gradient-text">feels infinite</span>
+    </h1>
+    <p class="hero-description">
+      Upload, share, and manage files with enterprise-grade infrastructure. 
+      Built with FastAPI + AWS S3, wrapped in a cinematic dark UI that impresses 
+      both examiners and users.
     </p>
     <div class="cta-row">
-      <a class="btn primary" href="/register">Get Started</a>
-      <a class="btn secondary" href="/login">Login</a>
-      <a class="btn ghost" href="/docs" target="_blank">API Docs ↗</a>
+      <a class="btn primary large" href="/register">
+        <span>Get Started Free</span>
+        <span class="btn-arrow">→</span>
+      </a>
+      <a class="btn secondary large" href="/login">Login</a>
+      <a class="btn ghost large" href="/docs" target="_blank">
+        <span>Explore API</span>
+        <span class="btn-arrow">↗</span>
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number">∞</span>
+        <span class="stat-label">Storage</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">100%</span>
+        <span class="stat-label">Secure</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">24/7</span>
+        <span class="stat-label">Available</span>
+      </div>
     </div>
   </div>
-  <div class="hero-terminal">
-    <p>$ curl -X POST /auth/login</p>
-    <p>{ "access_token": "•••", "token_type": "bearer" }</p>
-    <hr />
-    <p>$ curl -X POST /files/upload</p>
-    <p>{"file":"thesis.pdf","s3_key":"uploads/92ab..."}</p>
+  <div class="hero-visual">
+    <div class="code-window">
+      <div class="code-header">
+        <span class="code-dot"></span>
+        <span class="code-dot"></span>
+        <span class="code-dot"></span>
+        <span class="code-title">terminal</span>
+      </div>
+      <div class="code-content">
+        <div class="code-line">
+          <span class="code-prompt">$</span>
+          <span class="code-command">curl -X POST /auth/login</span>
+        </div>
+        <div class="code-response">
+          <span class="code-brace">{</span>
+          <div class="code-indent">
+            <span class="code-key">"access_token"</span>: <span class="code-string">"eyJhbGc..."</span>,<br>
+            <span class="code-key">"token_type"</span>: <span class="code-string">"bearer"</span>
+          </div>
+          <span class="code-brace">}</span>
+        </div>
+        <div class="code-line">
+          <span class="code-prompt">$</span>
+          <span class="code-command">curl -X POST /files/upload</span>
+        </div>
+        <div class="code-response">
+          <span class="code-brace">{</span>
+          <div class="code-indent">
+            <span class="code-key">"file"</span>: <span class="code-string">"thesis.pdf"</span>,<br>
+            <span class="code-key">"s3_key"</span>: <span class="code-string">"uploads/92ab..."</span>
+          </div>
+          <span class="code-brace">}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="feature-grid">
-  <article>
-    <h3>01 · Secure Auth</h3>
-    <p>JWT login, hashed passwords, role-based admin access.</p>
-  </article>
-  <article>
-    <h3>02 · Cloud Storage</h3>
-    <p>Uploads stream directly into AWS S3 with presigned downloads.</p>
-  </article>
-  <article>
-    <h3>03 · Expiring Links</h3>
-    <p>Sharable URLs auto-expire via S3 signatures to keep data private.</p>
-  </article>
-  <article>
-    <h3>04 · Insights</h3>
-    <p>Admin panel surfaces total bytes, uploads, and power users.</p>
-  </article>
+<section class="features-section">
+  <div class="section-header">
+    <h2>Why choose us?</h2>
+    <p class="muted">Everything you need for secure file management</p>
+  </div>
+  <div class="feature-grid-enhanced">
+    <article class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <h3>Secure Auth</h3>
+      <p>JWT-based authentication with bcrypt password hashing. Role-based access control ensures only admins see sensitive data.</p>
+    </article>
+    <article class="feature-card">
+      <div class="feature-icon">☁️</div>
+      <h3>Cloud Storage</h3>
+      <p>Files stream directly to AWS S3 with presigned URLs. Scalable, reliable, and backed by Amazon's infrastructure.</p>
+    </article>
+    <article class="feature-card">
+      <div class="feature-icon">⏱️</div>
+      <h3>Expiring Links</h3>
+      <p>Share files with time-limited links. Auto-expiring URLs via S3 signatures keep your data private and secure.</p>
+    </article>
+    <article class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Real-time Insights</h3>
+      <p>Admin dashboard tracks storage usage, upload counts, and user activity. Monitor everything in real-time.</p>
+    </article>
+  </div>
 </section>
 
-<section class="pill">
-  <p>
-    Stack: FastAPI · SQLAlchemy · boto3 · SQLite · Tailored dark UI with pure CSS
-  </p>
+<section class="tech-stack">
+  <div class="stack-content">
+    <span class="stack-label">Powered by</span>
+    <div class="stack-items">
+      <span class="stack-item">FastAPI</span>
+      <span class="stack-item">SQLAlchemy</span>
+      <span class="stack-item">AWS S3</span>
+      <span class="stack-item">boto3</span>
+      <span class="stack-item">SQLite</span>
+      <span class="stack-item">JWT</span>
+    </div>
+  </div>
 </section>
 {% endblock %}
-
