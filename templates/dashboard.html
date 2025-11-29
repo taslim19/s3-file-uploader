@@ -1,17 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="glass-panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Signed in as</p>
-      <h2>{{ user.full_name }}</h2>
-      <p class="muted">{{ user.email }}</p>
-    </div>
-    <div>
-      <span class="badge">{% if user.is_admin %}Admin{% else %}User{% endif %}</span>
-      <button onclick="logout()" class="btn secondary" style="margin-left: 0.5rem;">Logout</button>
-    </div>
-  </div>
   <div class="stats">
     <article>
       <p class="label">Total Files</p>
@@ -71,6 +60,14 @@
   </div>
   <div id="filesList" class="files-container list-view">
     <p class="muted">Loading files...</p>
+  </div>
+</section>
+
+<section class="glass-panel" id="shared">
+  <h3>Shared Links</h3>
+  <p class="muted" style="margin-bottom: 1rem;">Links you've created to share files</p>
+  <div id="sharedLinksList">
+    <p class="muted">Loading shared links...</p>
   </div>
 </section>
 
@@ -328,6 +325,9 @@ async function createShareLink() {
     
     const expiryDate = new Date(data.expires_at);
     document.getElementById('expiryInfo').textContent = `Link expires on ${expiryDate.toLocaleString()}`;
+    
+    // Refresh shared links list
+    loadSharedLinks();
   } catch (error) {
     alert('Error: ' + error.message);
   }
@@ -448,6 +448,72 @@ function renderFiles(files, viewMode) {
   }
 }
 
+// Load shared links
+async function loadSharedLinks() {
+  const sharedLinksList = document.getElementById('sharedLinksList');
+  sharedLinksList.innerHTML = '<p class="muted">Loading shared links...</p>';
+  
+  try {
+    const token = getToken();
+    const response = await fetch('/files/shares', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to load shared links');
+    }
+    
+    const shares = await response.json();
+    
+    if (shares.length === 0) {
+      sharedLinksList.innerHTML = '<p class="muted">No shared links yet. Share a file to create one!</p>';
+      return;
+    }
+    
+    sharedLinksList.innerHTML = shares.map(share => {
+      const shareUrl = `${window.location.origin}/shared/${share.token}`;
+      const expiresAt = new Date(share.expires_at);
+      const isExpired = expiresAt < new Date();
+      const statusClass = isExpired ? 'expired' : 'active';
+      const statusText = isExpired ? 'Expired' : 'Active';
+      
+      return `
+        <div class="share-link-item ${statusClass}">
+          <div class="share-link-info">
+            <div class="share-link-url">
+              <strong>${shareUrl}</strong>
+            </div>
+            <p class="muted">
+              Expires: ${expiresAt.toLocaleString()} · 
+              Status: <span class="status-badge ${statusClass}">${statusText}</span>
+            </p>
+          </div>
+          <div class="share-link-actions">
+            <button onclick="copyShareUrl('${shareUrl}')" class="btn secondary small">Copy</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (error) {
+    sharedLinksList.innerHTML = `<p class="error-message">Error loading shared links: ${error.message}</p>`;
+  }
+}
+
+function copyShareUrl(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    alert('Link copied to clipboard!');
+  }).catch(() => {
+    // Fallback for older browsers
+    const input = document.createElement('input');
+    input.value = url;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    alert('Link copied to clipboard!');
+  });
+}
+
 // Initialize view mode and active nav on page load
 document.addEventListener('DOMContentLoaded', () => {
   // Set active nav item
@@ -459,11 +525,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
+  // Handle hash anchor (scroll to shared section)
+  if (window.location.hash === '#shared') {
+    setTimeout(() => {
+      const sharedSection = document.getElementById('shared');
+      if (sharedSection) {
+        sharedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
+  
   // Initialize view mode
   setViewMode(currentViewMode);
 });
 
 loadFiles();
+loadSharedLinks();
 refreshUserStats();
 </script>
 {% endblock %}

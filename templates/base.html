@@ -11,7 +11,7 @@
     <div class="orb orb-right"></div>
     <div class="shell {% if user %}layout{% else %}layout-no-sidebar{% endif %}">
       {% if user %}
-      <aside class="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <span class="dot"></span>
           <div>
@@ -22,25 +22,25 @@
         <nav class="sidebar-nav">
           <a href="/" class="nav-item">
             <span class="nav-icon">🏠</span>
-            <span>Home</span>
+            <span class="nav-text">Home</span>
           </a>
           <a href="/dashboard" class="nav-item">
             <span class="nav-icon">📁</span>
-            <span>My Files</span>
+            <span class="nav-text">My Files</span>
           </a>
           <a href="/dashboard#shared" class="nav-item">
             <span class="nav-icon">🔗</span>
-            <span>Shared Links</span>
+            <span class="nav-text">Shared Links</span>
           </a>
           {% if user.is_admin %}
           <a href="/admin-panel" class="nav-item">
             <span class="nav-icon">⚙️</span>
-            <span>Admin</span>
+            <span class="nav-text">Admin</span>
           </a>
           {% endif %}
           <a href="/docs" target="_blank" class="nav-item">
             <span class="nav-icon">📚</span>
-            <span>API Docs</span>
+            <span class="nav-text">API Docs</span>
           </a>
         </nav>
       </aside>
@@ -48,7 +48,27 @@
       <div class="content-area">
         {% if user %}
         <header class="topbar">
-          <h1 class="hero-title">Where files meet infinity</h1>
+          <div class="topbar-left">
+            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar">
+              <span>☰</span>
+            </button>
+            <h1 class="hero-title">Where files meet infinity</h1>
+          </div>
+          <div class="user-menu">
+            <div class="user-avatar">
+              <span>{{ user.full_name[0].upper() }}</span>
+            </div>
+            <div class="user-info">
+              <div class="user-name">{{ user.full_name }}</div>
+              <div class="user-email">{{ user.email }}</div>
+            </div>
+            <div class="user-badge {% if user.is_admin %}admin{% else %}user{% endif %}">
+              {% if user.is_admin %}👑{% else %}👤{% endif %}
+            </div>
+            <button onclick="logout()" class="logout-btn" title="Logout">
+              <span>🚪</span>
+            </button>
+          </div>
         </header>
         {% endif %}
         <main class="main-content">
@@ -60,6 +80,37 @@
         </footer>
       </div>
     </div>
+    {% if user %}
+    <script>
+    // Sidebar toggle function (available on all authenticated pages)
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const layout = document.querySelector('.layout');
+      
+      if (sidebar && layout) {
+        sidebar.classList.toggle('collapsed');
+        layout.classList.toggle('sidebar-collapsed');
+        
+        // Save state to localStorage
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
+      }
+    }
+    
+    // Restore sidebar state on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+      if (sidebarCollapsed) {
+        const sidebar = document.getElementById('sidebar');
+        const layout = document.querySelector('.layout');
+        if (sidebar && layout) {
+          sidebar.classList.add('collapsed');
+          layout.classList.add('sidebar-collapsed');
+        }
+      }
+    });
+    </script>
+    {% endif %}
   </body>
 </html>
 

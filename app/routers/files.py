@@ -130,6 +130,21 @@ def delete_file(
     return {"message": "File deleted successfully"}
 
 
+@router.get("/shares", response_model=list[ShareLinkRead])
+def list_my_share_links(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+) -> list[models.ShareLink]:
+    """Get all share links created by the current user"""
+    shares = (
+        db.query(models.ShareLink)
+        .filter(models.ShareLink.created_by_id == current_user.id)
+        .order_by(models.ShareLink.expires_at.desc())
+        .all()
+    )
+    return shares
+
+
 @router.get("/shared/{token}")
 def use_share_link(
     token: str,
