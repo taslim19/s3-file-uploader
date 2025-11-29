@@ -9,28 +9,36 @@
   <body class="app-body">
     <div class="orb orb-left"></div>
     <div class="orb orb-right"></div>
-    <header class="shell">
-      <div class="brand">
-        <span class="dot"></span>
-        <div>
-          <p class="eyebrow">Mini Cloud Drive</p>
-          <h1 class="hero-title">Where files meet infinity</h1>
+    <div class="shell layout">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <span class="dot"></span>
+          <div>
+            <p class="eyebrow">Mini Cloud Drive</p>
+            <p class="sidebar-title">Cloud Console</p>
+          </div>
         </div>
+        <nav class="sidebar-nav">
+          <a href="/">Overview</a>
+          <a href="/dashboard">My Files</a>
+          <a href="/dashboard#shared">Shared Links</a>
+          <a href="/admin-panel">Admin</a>
+          <a href="/docs" target="_blank">API Docs ↗</a>
+        </nav>
+      </aside>
+      <div class="content-area">
+        <header class="topbar">
+          <h1 class="hero-title">Where files meet infinity</h1>
+        </header>
+        <main class="main-content">
+          {% block content %}{% endblock %}
+        </main>
+        <footer class="footer">
+          <p>FastAPI · AWS S3 · SQLite · JWT</p>
+          <p>&copy; 2025 Mini Cloud Drive</p>
+        </footer>
       </div>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/admin-panel">Admin</a>
-        <a class="ghost" href="/docs" target="_blank">API Docs ↗</a>
-      </nav>
-    </header>
-    <main class="shell">
-      {% block content %}{% endblock %}
-    </main>
-    <footer class="shell footer">
-      <p>FastAPI · AWS S3 · SQLite · JWT</p>
-      <p>&copy; 2025 Mini Cloud Drive</p>
-    </footer>
+    </div>
   </body>
 </html>
 

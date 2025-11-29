@@ -52,21 +52,38 @@ body {
 .shell {
   position: relative;
   z-index: 1;
-  width: min(1100px, 90vw);
+  width: min(1200px, 94vw);
   margin: 0 auto;
 }
 
-header.shell {
-  padding: 2.5rem 0 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 2rem;
+  padding: 2.5rem 0 2rem;
 }
 
-.brand {
+.sidebar {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  padding: 1.5rem;
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-brand {
+  display: flex;
+  gap: 0.9rem;
   align-items: center;
+}
+
+.sidebar-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
 }
 
 .dot {
@@ -101,32 +118,44 @@ header.shell {
   color: var(--accent-strong);
 }
 
-nav {
+.sidebar-nav {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-nav a {
+.sidebar-nav a {
   color: var(--text-muted);
   text-decoration: none;
-  padding: 0.35rem 0.9rem;
+  padding: 0.45rem 0.9rem;
   border-radius: 999px;
   border: 1px solid transparent;
   transition: 0.2s;
+  font-size: 0.9rem;
 }
 
-nav a:hover {
+.sidebar-nav a:hover {
   color: var(--text);
   border-color: var(--border);
 }
 
-nav a.ghost {
+.sidebar-nav a.ghost {
   border-color: var(--border);
 }
 
-main.shell {
-  padding: 2rem 0 3rem;
+.content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main-content {
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -276,7 +305,7 @@ textarea {
 .footer {
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   padding-top: 1.5rem;
-  margin-bottom: 2rem;
+  margin-top: 1.5rem;
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
@@ -568,11 +597,19 @@ textarea {
 }
 
 @media (max-width: 600px) {
-  header.shell {
-    text-align: center;
+  .layout {
+    grid-template-columns: 1fr;
   }
-  nav {
-    justify-content: center;
+  .sidebar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
   }
   .panel-header {
     flex-direction: column;

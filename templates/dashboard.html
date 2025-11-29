@@ -15,11 +15,11 @@
   <div class="stats">
     <article>
       <p class="label">Total Files</p>
-      <h3>{{ user.file_count }}</h3>
+      <h3 id="fileCount">{{ user.file_count }}</h3>
     </article>
     <article>
       <p class="label">Storage Used</p>
-      <h3>{{ '%.2f' | format(user.total_bytes / (1024*1024)) }} MB</h3>
+      <h3 id="storageUsed">{{ '%.2f' | format(user.total_bytes / (1024*1024)) }} MB</h3>
     </article>
     {% if user.is_admin %}
     <article>
@@ -189,6 +189,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       progressDiv.style.display = 'none';
       uploadBtn.disabled = false;
       loadFiles();
+      refreshUserStats();
     }, 1000);
   } catch (error) {
     progressDiv.style.display = 'none';
@@ -240,6 +241,34 @@ async function loadFiles() {
     `).join('');
   } catch (error) {
     filesList.innerHTML = `<p class="error-message">Error loading files: ${error.message}</p>`;
+  }
+}
+
+// Refresh header stats from /auth/me
+async function refreshUserStats() {
+  try {
+    const token = getToken();
+    const response = await fetch('/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const me = await response.json();
+    const fileCountEl = document.getElementById('fileCount');
+    const storageUsedEl = document.getElementById('storageUsed');
+
+    if (fileCountEl) {
+      fileCountEl.textContent = me.file_count;
+    }
+    if (storageUsedEl) {
+      const mb = (me.total_bytes / (1024 * 1024)).toFixed(2);
+      storageUsedEl.textContent = `${mb} MB`;
+    }
+  } catch (error) {
+    // Ignore errors here; dashboard will still work
   }
 }
 
@@ -324,6 +353,7 @@ async function deleteFile(fileId, filename) {
     
     // Reload files list
     loadFiles();
+    refreshUserStats();
   } catch (error) {
     alert('Error: ' + error.message);
   }
@@ -367,7 +397,8 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Load files on page load
+// Load files and stats on page load
 loadFiles();
+refreshUserStats();
 </script>
 {% endblock %}
