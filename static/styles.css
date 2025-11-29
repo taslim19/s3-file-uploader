@@ -1315,6 +1315,123 @@ textarea {
   border: 1px solid rgba(255, 107, 107, 0.3);
 }
 
+/* Home Page Styles */
+.welcome-section {
+  margin-bottom: 2rem;
+}
+
+.welcome-header h2 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(124, 93, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(124, 93, 255, 0.2);
+}
+
+.stat-content h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.8rem;
+  margin: 0;
+  color: var(--accent-strong);
+}
+
+.section-header-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.action-card:hover {
+  border-color: var(--accent);
+  background: rgba(124, 93, 255, 0.05);
+  transform: translateX(4px);
+}
+
+.action-icon {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(124, 93, 255, 0.1);
+  border-radius: 12px;
+}
+
+.action-text {
+  flex: 1;
+}
+
+.action-text strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 1.1rem;
+}
+
+.action-arrow {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.action-card:hover .action-arrow {
+  transform: translateX(4px);
+  color: var(--accent-strong);
+}
+
 @media (max-width: 600px) {
   .layout {
     grid-template-columns: 1fr;

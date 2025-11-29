@@ -66,7 +66,7 @@
               {% if user.is_admin %}👑{% else %}👤{% endif %}
             </div>
             <button onclick="logout()" class="logout-btn" title="Logout">
-              <span>🚪</span>
+              <span>⏻</span>
             </button>
           </div>
         </header>
@@ -82,6 +82,13 @@
     </div>
     {% if user %}
     <script>
+    // Logout function (available on all authenticated pages)
+    function logout() {
+      localStorage.removeItem('access_token');
+      document.cookie = 'access_token=; path=/; max-age=0';
+      window.location.href = '/login';
+    }
+    
     // Sidebar toggle function (available on all authenticated pages)
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
@@ -97,10 +104,13 @@
       }
     }
     
-    // Restore sidebar state on page load
+    // Restore sidebar state on page load (default to collapsed)
     document.addEventListener('DOMContentLoaded', () => {
-      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-      if (sidebarCollapsed) {
+      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+      // If no preference saved, default to collapsed (closed)
+      const shouldCollapse = sidebarCollapsed === null ? true : sidebarCollapsed === 'true';
+      
+      if (shouldCollapse) {
         const sidebar = document.getElementById('sidebar');
         const layout = document.querySelector('.layout');
         if (sidebar && layout) {

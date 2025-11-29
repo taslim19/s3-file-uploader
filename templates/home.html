@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="welcome-section">
+  <div class="welcome-header">
+    <h2>Welcome back, {{ user.full_name }}!</h2>
+    <p class="muted">Here's what's happening with your files</p>
+  </div>
+</section>
+
+<section class="glass-panel">
+  <div class="quick-stats">
+    <div class="stat-card">
+      <div class="stat-icon">📁</div>
+      <div class="stat-content">
+        <h3 id="fileCount">{{ user.file_count }}</h3>
+        <p class="muted">Total Files</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💾</div>
+      <div class="stat-content">
+        <h3 id="storageUsed">{{ '%.2f' | format(user.total_bytes / (1024*1024)) }} MB</h3>
+        <p class="muted">Storage Used</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔗</div>
+      <div class="stat-content">
+        <h3 id="shareCount">-</h3>
+        <p class="muted">Active Links</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="glass-panel">
+  <div class="section-header-inline">
+    <h3>Recent Files</h3>
+    <a href="/dashboard" class="btn secondary small">View All</a>
+  </div>
+  <div id="recentFiles" class="files-container grid-view">
+    <p class="muted">Loading recent files...</p>
+  </div>
+</section>
+
+<section class="glass-panel">
+  <div class="section-header-inline">
+    <h3>Quick Actions</h3>
+  </div>
+  <div class="quick-actions">
+    <a href="/dashboard" class="action-card">
+      <div class="action-icon">📤</div>
+      <div class="action-text">
+        <strong>Upload Files</strong>
+        <p class="muted">Add new files to your drive</p>
+      </div>
+      <span class="action-arrow">→</span>
+    </a>
+    <a href="/dashboard#shared" class="action-card">
+      <div class="action-icon">🔗</div>
+      <div class="action-text">
+        <strong>Shared Links</strong>
+        <p class="muted">Manage your share links</p>
+      </div>
+      <span class="action-arrow">→</span>
+    </a>
+    {% if user.is_admin %}
+    <a href="/admin-panel" class="action-card">
+      <div class="action-icon">⚙️</div>
+      <div class="action-text">
+        <strong>Admin Panel</strong>
+        <p class="muted">View system statistics</p>
+      </div>
+      <span class="action-arrow">→</span>
+    </a>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+function getToken() {
+  return localStorage.getItem('access_token') || 
+         document.cookie.split('; ').find(row => row.startsWith('access_token='))?.split('=')[1] || 
+         '';
+}
+
+// Load recent files
+async function loadRecentFiles() {
+  const recentFiles = document.getElementById('recentFiles');
+  
+  try {
+    const token = getToken();
+    const response = await fetch('/files/', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to load files');
+    }
+    
+    const files = await response.json();
+    
+    if (files.length === 0) {
+      recentFiles.innerHTML = '<p class="muted">No files yet. <a href="/dashboard">Upload your first file</a>!</p>';
+      return;
+    }
+    
+    // Show only first 6 files
+    const recent = files.slice(0, 6);
+    
+    recentFiles.innerHTML = recent.map(file => `
+      <div class="file-card">
+        <div class="file-card-icon">📄</div>
+        <div class="file-card-name" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</div>
+        <div class="file-card-meta">
+          <span class="muted">${formatBytes(file.size)}</span>
+        </div>
+        <div class="file-card-actions">
+          <button onclick="downloadFile(${file.id})" class="btn-icon" title="Download">⬇️</button>
+          <button onclick="window.location.href='/dashboard'" class="btn-icon" title="View">👁️</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    recentFiles.innerHTML = `<p class="error-message">Error loading files: ${error.message}</p>`;
+  }
+}
+
+// Load share count
+async function loadShareCount() {
+  try {
+    const token = getToken();
+    const response = await fetch('/files/shares', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (response.ok) {
+      const shares = await response.json();
+      const activeShares = shares.filter(s => new Date(s.expires_at) > new Date()).length;
+      document.getElementById('shareCount').textContent = activeShares;
+    }
+  } catch (error) {
+    // Ignore errors
+  }
+}
+
+// Refresh user stats
+async function refreshUserStats() {
+  try {
+    const token = getToken();
+    const response = await fetch('/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const me = await response.json();
+    const fileCountEl = document.getElementById('fileCount');
+    const storageUsedEl = document.getElementById('storageUsed');
+
+    if (fileCountEl) {
+      fileCountEl.textContent = me.file_count;
+    }
+    if (storageUsedEl) {
+      const mb = (me.total_bytes / (1024 * 1024)).toFixed(2);
+      storageUsedEl.textContent = `${mb} MB`;
+    }
+  } catch (error) {
+    // Ignore errors
+  }
+}
+
+async function downloadFile(fileId) {
+  try {
+    const token = getToken();
+    const response = await fetch(`/files/${fileId}/download`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get download link');
+    }
+    
+    const data = await response.json();
+    window.open(data.url, '_blank');
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Load data on page load
+loadRecentFiles();
+loadShareCount();
+refreshUserStats();
+</script>
+{% endblock %}
+

@@ -95,6 +95,27 @@ async def get_current_user(
     return user
 
 
+async def get_optional_user(
+    request: Request,
+    db: Annotated[Session, Depends(get_db)],
+) -> models.User | None:
+    """Optional user - returns None if not logged in (no exception)"""
+    token = await get_token_from_request(request)
+    if not token:
+        return None
+    
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+        email: str | None = payload.get("sub")
+        token_data = TokenData(sub=email)
+    except JWTError:
+        return None
+    if token_data.sub is None:
+        return None
+    user = get_user_by_email(db, token_data.sub)
+    return user if user and user.is_active else None
+
+
 async def get_current_active_user(
     current_user: Annotated[models.User, Depends(get_current_user)],
 ) -> models.User:

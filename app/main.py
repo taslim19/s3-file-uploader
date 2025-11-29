@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app import models
-from app.auth import get_current_active_user
+from app.auth import get_current_active_user, get_optional_user
 from app.database import Base, engine
 from app.routers import admin, files, users
 
@@ -24,7 +24,20 @@ def on_startup() -> None:
 
 
 @app.get("/", response_class=HTMLResponse)
-def landing(request: Request):
+def landing(
+    request: Request,
+    current_user: models.User | None = Depends(get_optional_user),
+):
+    # If user is logged in, show personalized home page (like Google Drive)
+    if current_user:
+        return templates.TemplateResponse(
+            "home.html",
+            {
+                "request": request,
+                "user": current_user,
+            },
+        )
+    # Otherwise show public landing page
     return templates.TemplateResponse(
         "landing.html",
         {
