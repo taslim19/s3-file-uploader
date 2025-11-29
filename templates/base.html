@@ -19,11 +19,28 @@
           </div>
         </div>
         <nav class="sidebar-nav">
-          <a href="/">Overview</a>
-          <a href="/dashboard">My Files</a>
-          <a href="/dashboard#shared">Shared Links</a>
-          <a href="/admin-panel">Admin</a>
-          <a href="/docs" target="_blank">API Docs ↗</a>
+          <a href="/" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+          </a>
+          <a href="/dashboard" class="nav-item">
+            <span class="nav-icon">📁</span>
+            <span>My Files</span>
+          </a>
+          <a href="/dashboard#shared" class="nav-item">
+            <span class="nav-icon">🔗</span>
+            <span>Shared Links</span>
+          </a>
+          {% if user and user.is_admin %}
+          <a href="/admin-panel" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span>Admin</span>
+          </a>
+          {% endif %}
+          <a href="/docs" target="_blank" class="nav-item">
+            <span class="nav-icon">📚</span>
+            <span>API Docs</span>
+          </a>
         </nav>
       </aside>
       <div class="content-area">

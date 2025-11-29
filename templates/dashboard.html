@@ -58,8 +58,18 @@
 </section>
 
 <section class="glass-panel">
-  <h3>My Files</h3>
-  <div id="filesList">
+  <div class="files-header">
+    <h3>My Files</h3>
+    <div class="view-toggle">
+      <button id="listViewBtn" class="view-btn active" onclick="setViewMode('list')" title="List view">
+        <span>☰</span>
+      </button>
+      <button id="gridViewBtn" class="view-btn" onclick="setViewMode('grid')" title="Grid view">
+        <span>⊞</span>
+      </button>
+    </div>
+  </div>
+  <div id="filesList" class="files-container list-view">
     <p class="muted">Loading files...</p>
   </div>
 </section>
@@ -226,19 +236,8 @@ async function loadFiles() {
       return;
     }
     
-    filesList.innerHTML = files.map(file => `
-      <div class="file-item">
-        <div class="file-info">
-          <strong>${escapeHtml(file.filename)}</strong>
-          <p class="muted">${formatBytes(file.size)} · ${formatDate(file.uploaded_at)}</p>
-        </div>
-        <div class="file-actions">
-          <button onclick="downloadFile(${file.id})" class="btn secondary small">Download</button>
-          <button onclick="shareFile(${file.id})" class="btn primary small">Share</button>
-          <button onclick="deleteFile(${file.id}, '${escapeHtml(file.filename)}')" class="btn danger small">Delete</button>
-        </div>
-      </div>
-    `).join('');
+    const viewMode = localStorage.getItem('viewMode') || 'list';
+    renderFiles(files, viewMode);
   } catch (error) {
     filesList.innerHTML = `<p class="error-message">Error loading files: ${error.message}</p>`;
   }
@@ -398,6 +397,72 @@ function escapeHtml(text) {
 }
 
 // Load files and stats on page load
+let currentViewMode = localStorage.getItem('viewMode') || 'list';
+
+function setViewMode(mode) {
+  currentViewMode = mode;
+  localStorage.setItem('viewMode', mode);
+  
+  const filesList = document.getElementById('filesList');
+  filesList.className = `files-container ${mode}-view`;
+  
+  document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+  document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+  
+  // Re-render files with new view mode
+  loadFiles();
+}
+
+function renderFiles(files, viewMode) {
+  const filesList = document.getElementById('filesList');
+  
+  if (viewMode === 'grid') {
+    filesList.innerHTML = files.map(file => `
+      <div class="file-card">
+        <div class="file-card-icon">📄</div>
+        <div class="file-card-name" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</div>
+        <div class="file-card-meta">
+          <span class="muted">${formatBytes(file.size)}</span>
+        </div>
+        <div class="file-card-actions">
+          <button onclick="downloadFile(${file.id})" class="btn-icon" title="Download">⬇️</button>
+          <button onclick="shareFile(${file.id})" class="btn-icon" title="Share">🔗</button>
+          <button onclick="deleteFile(${file.id}, '${escapeHtml(file.filename)}')" class="btn-icon danger" title="Delete">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    filesList.innerHTML = files.map(file => `
+      <div class="file-item">
+        <div class="file-info">
+          <strong>${escapeHtml(file.filename)}</strong>
+          <p class="muted">${formatBytes(file.size)} · ${formatDate(file.uploaded_at)}</p>
+        </div>
+        <div class="file-actions">
+          <button onclick="downloadFile(${file.id})" class="btn secondary small">Download</button>
+          <button onclick="shareFile(${file.id})" class="btn primary small">Share</button>
+          <button onclick="deleteFile(${file.id}, '${escapeHtml(file.filename)}')" class="btn danger small">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// Initialize view mode and active nav on page load
+document.addEventListener('DOMContentLoaded', () => {
+  // Set active nav item
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const href = item.getAttribute('href');
+    if (href === currentPath || (currentPath === '/' && href === '/')) {
+      item.classList.add('active');
+    }
+  });
+  
+  // Initialize view mode
+  setViewMode(currentViewMode);
+});
+
 loadFiles();
 refreshUserStats();
 </script>
