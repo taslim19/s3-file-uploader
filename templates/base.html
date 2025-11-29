@@ -9,7 +9,8 @@
   <body class="app-body">
     <div class="orb orb-left"></div>
     <div class="orb orb-right"></div>
-    <div class="shell layout">
+    <div class="shell {% if user %}layout{% else %}layout-no-sidebar{% endif %}">
+      {% if user %}
       <aside class="sidebar">
         <div class="sidebar-brand">
           <span class="dot"></span>
@@ -31,7 +32,7 @@
             <span class="nav-icon">🔗</span>
             <span>Shared Links</span>
           </a>
-          {% if user and user.is_admin %}
+          {% if user.is_admin %}
           <a href="/admin-panel" class="nav-item">
             <span class="nav-icon">⚙️</span>
             <span>Admin</span>
@@ -43,10 +44,13 @@
           </a>
         </nav>
       </aside>
+      {% endif %}
       <div class="content-area">
+        {% if user %}
         <header class="topbar">
           <h1 class="hero-title">Where files meet infinity</h1>
         </header>
+        {% endif %}
         <main class="main-content">
           {% block content %}{% endblock %}
         </main>
