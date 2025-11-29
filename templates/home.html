@@ -1,82 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="home-page">
-<section class="welcome-section">
-  <div class="welcome-header">
-    <h2>Welcome back, {{ user.full_name }}!</h2>
-    <p class="muted">Here's what's happening with your files</p>
-  </div>
-</section>
-
-<section class="glass-panel">
-  <div class="quick-stats">
-    <div class="stat-card">
-      <div class="stat-icon">📁</div>
-      <div class="stat-content">
-        <h3 id="fileCount">{{ user.file_count }}</h3>
-        <p class="muted">Total Files</p>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">💾</div>
-      <div class="stat-content">
-        <h3 id="storageUsed">{{ '%.2f' | format(user.total_bytes / (1024*1024)) }} MB</h3>
-        <p class="muted">Storage Used</p>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">🔗</div>
-      <div class="stat-content">
-        <h3 id="shareCount">-</h3>
-        <p class="muted">Active Links</p>
-      </div>
+<div class="home-page-drive">
+  <div class="welcome-section-drive">
+    <h1 class="welcome-title">Welcome to Drive</h1>
+    <div class="welcome-subtitle">
+      <span id="storageInfo">{{ '%.2f' | format(user.total_bytes / (1024*1024)) }} MB used</span>
+      <span class="separator">•</span>
+      <span id="fileCountInfo">{{ user.file_count }} files</span>
     </div>
   </div>
-</section>
 
-<section class="glass-panel">
-  <div class="section-header-inline">
-    <h3>Recent Files</h3>
-    <a href="/dashboard" class="btn secondary small">View All</a>
-  </div>
-  <div id="recentFiles" class="files-container grid-view">
-    <p class="muted">Loading recent files...</p>
-  </div>
-</section>
-
-<section class="glass-panel">
-  <div class="section-header-inline">
-    <h3>Quick Actions</h3>
-  </div>
-  <div class="quick-actions">
-    <a href="/dashboard" class="action-card">
-      <div class="action-icon">📤</div>
-      <div class="action-text">
-        <strong>Upload Files</strong>
-        <p class="muted">Add new files to your drive</p>
+  <div class="suggested-files-section">
+    <div class="section-header-drive">
+      <h2 class="section-title-drive">Suggested files</h2>
+      <div class="view-controls">
+        <button class="view-btn active" data-view="grid" title="Grid view">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z"/>
+          </svg>
+        </button>
+        <button class="view-btn" data-view="list" title="List view">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zm0-8h14V7H7v2z"/>
+          </svg>
+        </button>
       </div>
-      <span class="action-arrow">→</span>
-    </a>
-    <a href="/dashboard#shared" class="action-card">
-      <div class="action-icon">🔗</div>
-      <div class="action-text">
-        <strong>Shared Links</strong>
-        <p class="muted">Manage your share links</p>
+    </div>
+    <div id="recentFiles" class="files-grid-drive">
+      <div class="loading-files">
+        <div class="spinner-small"></div>
+        <p class="muted">Loading files...</p>
       </div>
-      <span class="action-arrow">→</span>
-    </a>
-    {% if user.is_admin %}
-    <a href="/admin-panel" class="action-card">
-      <div class="action-icon">⚙️</div>
-      <div class="action-text">
-        <strong>Admin Panel</strong>
-        <p class="muted">View system statistics</p>
-      </div>
-      <span class="action-arrow">→</span>
-    </a>
-    {% endif %}
+    </div>
   </div>
-</section>
+</div>
 
 <script>
 function getToken() {
@@ -102,47 +59,57 @@ async function loadRecentFiles() {
     const files = await response.json();
     
     if (files.length === 0) {
-      recentFiles.innerHTML = '<p class="muted">No files yet. <a href="/dashboard">Upload your first file</a>!</p>';
+      recentFiles.innerHTML = `
+        <div class="empty-state-drive">
+          <div class="empty-icon">📁</div>
+          <h3>No files yet</h3>
+          <p class="muted">Upload your first file to get started</p>
+          <a href="/dashboard" class="btn primary">Upload Files</a>
+        </div>
+      `;
       return;
     }
     
-    // Show only first 6 files
-    const recent = files.slice(0, 6);
+    // Show all files (or limit to 20 for performance)
+    const recent = files.slice(0, 20);
     
-    recentFiles.innerHTML = recent.map(file => `
-      <div class="file-card">
-        <div class="file-card-icon">📄</div>
-        <div class="file-card-name" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</div>
-        <div class="file-card-meta">
-          <span class="muted">${formatBytes(file.size)}</span>
+    recentFiles.innerHTML = recent.map(file => {
+      const uploadedDate = new Date(file.uploaded_at);
+      const dateStr = uploadedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const fileIcon = getFileIcon(file.filename);
+      
+      return `
+        <div class="file-card-drive" onclick="window.location.href='/dashboard'">
+          <div class="file-thumbnail-drive">
+            <div class="file-icon-drive">${fileIcon}</div>
+          </div>
+          <div class="file-info-drive">
+            <div class="file-name-drive" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</div>
+            <div class="file-meta-drive">
+              <span class="muted">You uploaded</span>
+              <span class="separator">•</span>
+              <span class="muted">${dateStr}</span>
+            </div>
+          </div>
         </div>
-        <div class="file-card-actions">
-          <button onclick="downloadFile(${file.id})" class="btn-icon" title="Download">⬇️</button>
-          <button onclick="window.location.href='/dashboard'" class="btn-icon" title="View">👁️</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (error) {
     recentFiles.innerHTML = `<p class="error-message">Error loading files: ${error.message}</p>`;
   }
 }
 
-// Load share count
-async function loadShareCount() {
-  try {
-    const token = getToken();
-    const response = await fetch('/files/shares', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    
-    if (response.ok) {
-      const shares = await response.json();
-      const activeShares = shares.filter(s => new Date(s.expires_at) > new Date()).length;
-      document.getElementById('shareCount').textContent = activeShares;
-    }
-  } catch (error) {
-    // Ignore errors
-  }
+function getFileIcon(filename) {
+  const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+  const icons = {
+    '.pdf': '📕', '.doc': '📘', '.docx': '📘', '.txt': '📄',
+    '.xls': '📊', '.xlsx': '📊', '.ppt': '📽️', '.pptx': '📽️',
+    '.zip': '📦', '.rar': '📦', '.7z': '📦',
+    '.mp4': '🎬', '.avi': '🎬', '.mov': '🎬', '.mkv': '🎬',
+    '.mp3': '🎵', '.wav': '🎵', '.flac': '🎵',
+    '.jpg': '🖼️', '.jpeg': '🖼️', '.png': '🖼️', '.gif': '🖼️', '.webp': '🖼️', '.bmp': '🖼️'
+  };
+  return icons[ext] || '📄';
 }
 
 // Refresh user stats
@@ -158,20 +125,43 @@ async function refreshUserStats() {
     }
 
     const me = await response.json();
-    const fileCountEl = document.getElementById('fileCount');
-    const storageUsedEl = document.getElementById('storageUsed');
+    const fileCountEl = document.getElementById('fileCountInfo');
+    const storageUsedEl = document.getElementById('storageInfo');
 
     if (fileCountEl) {
-      fileCountEl.textContent = me.file_count;
+      fileCountEl.textContent = `${me.file_count} files`;
     }
     if (storageUsedEl) {
       const mb = (me.total_bytes / (1024 * 1024)).toFixed(2);
-      storageUsedEl.textContent = `${mb} MB`;
+      storageUsedEl.textContent = `${mb} MB used`;
     }
   } catch (error) {
     // Ignore errors
   }
 }
+
+// View toggle
+document.addEventListener('DOMContentLoaded', () => {
+  const viewBtns = document.querySelectorAll('.view-btn');
+  const filesGrid = document.getElementById('recentFiles');
+  
+  viewBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      viewBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const view = btn.getAttribute('data-view');
+      filesGrid.className = view === 'grid' ? 'files-grid-drive' : 'files-list-drive';
+      localStorage.setItem('homeViewMode', view);
+    });
+  });
+  
+  // Restore saved view mode
+  const savedView = localStorage.getItem('homeViewMode') || 'grid';
+  const activeBtn = document.querySelector(`.view-btn[data-view="${savedView}"]`);
+  if (activeBtn) {
+    activeBtn.click();
+  }
+});
 
 async function downloadFile(fileId) {
   try {
@@ -207,9 +197,7 @@ function escapeHtml(text) {
 
 // Load data on page load
 loadRecentFiles();
-loadShareCount();
 refreshUserStats();
 </script>
-</div>
 {% endblock %}
 

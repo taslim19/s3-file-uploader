@@ -1,21 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="auth-container">
-  <div class="glass-panel auth-panel">
-    <h2>Shared File</h2>
+<section class="shared-file-container">
+  <div class="glass-panel shared-file-panel">
     <div id="fileInfo">
-      <p class="muted">Loading file information...</p>
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p class="muted">Loading file information...</p>
+      </div>
     </div>
     <div id="errorMsg" class="error-message" style="display: none;"></div>
-    <button id="downloadBtn" class="btn primary full-width" style="display: none;" onclick="downloadSharedFile()">
-      Download File
-    </button>
+    <div id="filePreview" style="display: none;">
+      <div class="file-preview-content">
+        <img id="imagePreview" class="image-preview" alt="Preview" style="display: none;">
+        <div id="fileDetails" class="file-details"></div>
+      </div>
+      <button id="downloadBtn" class="btn primary large full-width" onclick="downloadSharedFile()">
+        <span>⬇️</span>
+        <span>Download File</span>
+      </button>
+    </div>
   </div>
 </section>
 
 <script>
 const token = '{{ token }}';
 let downloadUrl = '';
+let fileName = '';
+
+// Check if file is an image
+function isImageFile(filename) {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico'];
+  const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+  return imageExtensions.includes(ext);
+}
 
 async function loadSharedFile() {
   try {
@@ -28,13 +45,36 @@ async function loadSharedFile() {
     
     const data = await response.json();
     downloadUrl = data.url;
+    fileName = data.filename;
     
-    document.getElementById('fileInfo').innerHTML = `
-      <h3>${escapeHtml(data.filename)}</h3>
-      <p class="muted">Click the button below to download</p>
+    const isImage = isImageFile(fileName);
+    
+    // Hide loading state
+    document.getElementById('fileInfo').style.display = 'none';
+    
+    // Show file preview
+    const filePreview = document.getElementById('filePreview');
+    filePreview.style.display = 'block';
+    
+    // Set file details
+    const fileDetails = document.getElementById('fileDetails');
+    fileDetails.innerHTML = `
+      <h2>${escapeHtml(fileName)}</h2>
+      <p class="muted">Shared file ready to download</p>
     `;
-    document.getElementById('downloadBtn').style.display = 'block';
+    
+    // If it's an image, show preview
+    if (isImage) {
+      const imagePreview = document.getElementById('imagePreview');
+      imagePreview.src = downloadUrl;
+      imagePreview.style.display = 'block';
+      imagePreview.onerror = function() {
+        // If image fails to load, hide it
+        imagePreview.style.display = 'none';
+      };
+    }
   } catch (error) {
+    document.getElementById('fileInfo').style.display = 'none';
     document.getElementById('errorMsg').textContent = error.message;
     document.getElementById('errorMsg').style.display = 'block';
   }
@@ -42,7 +82,14 @@ async function loadSharedFile() {
 
 function downloadSharedFile() {
   if (downloadUrl) {
-    window.open(downloadUrl, '_blank');
+    // Create a temporary anchor element for download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }
 

@@ -1315,121 +1315,247 @@ textarea {
   border: 1px solid rgba(255, 107, 107, 0.3);
 }
 
-/* Home Page Styles */
-.welcome-section {
-  margin-bottom: 2rem;
+/* Google Drive-style Home Page */
+.home-page-drive {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 2rem 4rem;
 }
 
-.welcome-header h2 {
+.welcome-section-drive {
+  margin-bottom: 3rem;
+}
+
+.welcome-title {
   font-family: "Space Grotesk", sans-serif;
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  margin-bottom: 0.5rem;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 500;
   color: var(--text);
+  margin: 0 0 0.5rem 0;
 }
 
-.quick-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.stat-card {
+.welcome-subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  transition: all 0.2s;
+  gap: 0.5rem;
 }
 
-.stat-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
+.welcome-subtitle .separator {
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
-.stat-icon {
-  font-size: 2.5rem;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(124, 93, 255, 0.1);
-  border-radius: 12px;
-  border: 1px solid rgba(124, 93, 255, 0.2);
+.suggested-files-section {
+  margin-top: 2rem;
 }
 
-.stat-content h3 {
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 1.8rem;
-  margin: 0;
-  color: var(--accent-strong);
-}
-
-.section-header-inline {
+.section-header-drive {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.quick-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.action-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  text-decoration: none;
+.section-title-drive {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 500;
   color: var(--text);
+  margin: 0;
+}
+
+.view-controls {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
+.view-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
   transition: all 0.2s;
-}
-
-.action-card:hover {
-  border-color: var(--accent);
-  background: rgba(124, 93, 255, 0.05);
-  transform: translateX(4px);
-}
-
-.action-icon {
-  font-size: 2rem;
-  width: 50px;
-  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(124, 93, 255, 0.1);
-  border-radius: 12px;
 }
 
-.action-text {
+.view-btn:hover {
+  background: rgba(124, 93, 255, 0.1);
+  color: var(--text);
+}
+
+.view-btn.active {
+  background: rgba(124, 93, 255, 0.2);
+  color: var(--accent-strong);
+}
+
+.files-grid-drive {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.files-list-drive {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-card-drive {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 200px;
+}
+
+.files-list-drive .file-card-drive {
+  flex-direction: row;
+  text-align: left;
+  min-height: auto;
+  padding: 0.75rem 1rem;
+}
+
+.file-card-drive:hover {
+  background: rgba(124, 93, 255, 0.08);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 93, 255, 0.15);
+}
+
+.file-thumbnail-drive {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.files-list-drive .file-thumbnail-drive {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.file-thumbnail-drive img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-icon-drive {
+  font-size: 3rem;
+  opacity: 0.7;
+}
+
+.files-list-drive .file-icon-drive {
+  font-size: 2rem;
+}
+
+.file-info-drive {
+  width: 100%;
   flex: 1;
 }
 
-.action-text strong {
-  display: block;
+.files-list-drive .file-info-drive {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.file-name-drive {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
   margin-bottom: 0.25rem;
-  font-size: 1.1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.action-arrow {
-  font-size: 1.5rem;
+.files-list-drive .file-name-drive {
+  font-size: 0.95rem;
+  margin-bottom: 0.15rem;
+}
+
+.file-meta-drive {
+  font-size: 0.8rem;
   color: var(--text-muted);
-  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
-.action-card:hover .action-arrow {
-  transform: translateX(4px);
-  color: var(--accent-strong);
+.files-list-drive .file-meta-drive {
+  justify-content: flex-start;
+}
+
+.file-meta-drive .separator {
+  opacity: 0.5;
+}
+
+.loading-files {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner-small {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(124, 93, 255, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.empty-state-drive {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state-drive h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.empty-state-drive p {
+  margin-bottom: 1.5rem;
 }
 
 /* Copy feedback animations */
@@ -1548,6 +1674,88 @@ textarea {
 #recentFiles .btn-icon:hover {
   background: rgba(124, 93, 255, 0.2);
   border-color: var(--accent);
+}
+
+/* Shared File Page Styles */
+.shared-file-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+  padding: 2rem;
+}
+
+.shared-file-panel {
+  max-width: 800px;
+  width: 100%;
+  padding: 2.5rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(124, 93, 255, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.file-preview-content {
+  margin-bottom: 2rem;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 500px;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  margin: 0 auto 1.5rem;
+  display: block;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.file-details {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.file-details h2 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.file-details p.muted {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.btn.large {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.btn.large span:first-child {
+  font-size: 1.3rem;
 }
 
 @media (max-width: 600px) {

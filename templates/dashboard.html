@@ -472,15 +472,27 @@ async function loadSharedLinks() {
     
     sharedLinksList.innerHTML = shares.map((share, index) => {
       const shareUrl = `${window.location.origin}/shared/${share.token}`;
-      // Parse the date string properly (API returns ISO format)
-      const expiresAt = new Date(share.expires_at);
+      
+      // Parse the date string - FastAPI returns ISO format datetime
+      // Pydantic serializes datetime.utcnow() as ISO string without 'Z'
+      // We need to treat it as UTC
+      let expiresAtStr = share.expires_at;
+      
+      // If the string doesn't end with 'Z' or timezone offset, treat as UTC
+      if (!expiresAtStr.endsWith('Z') && !expiresAtStr.match(/[+-]\d{2}:\d{2}$/)) {
+        // Add 'Z' to indicate UTC
+        expiresAtStr = expiresAtStr + 'Z';
+      }
+      
+      const expiresAt = new Date(expiresAtStr);
       const now = new Date();
-      // Compare properly - account for timezone issues
+      
+      // Compare timestamps - link is expired if expires_at is in the past
       const isExpired = expiresAt.getTime() < now.getTime();
       const statusClass = isExpired ? 'expired' : 'active';
       const statusText = isExpired ? 'Expired' : 'Active';
       
-      // Format date nicely
+      // Format date nicely in local timezone for display
       const expiresStr = expiresAt.toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
