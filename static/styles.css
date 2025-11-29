@@ -1432,6 +1432,124 @@ textarea {
   color: var(--accent-strong);
 }
 
+/* Copy feedback animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Improved home page layout */
+.home-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.welcome-section {
+  margin-bottom: 2.5rem;
+}
+
+.welcome-header h2 {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent-strong) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-header p.muted {
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+}
+
+/* Better spacing for home page sections */
+.home-page .glass-panel {
+  margin-bottom: 2rem;
+  padding: 2rem;
+}
+
+.home-page .glass-panel:last-child {
+  margin-bottom: 0;
+}
+
+.home-page .section-header-inline h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--text);
+}
+
+/* File cards in home page */
+#recentFiles .file-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+#recentFiles .file-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  background: rgba(124, 93, 255, 0.05);
+}
+
+#recentFiles .file-card-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+#recentFiles .file-card-name {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#recentFiles .file-card-meta {
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+#recentFiles .file-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+#recentFiles .btn-icon {
+  background: rgba(124, 93, 255, 0.1);
+  border: 1px solid rgba(124, 93, 255, 0.2);
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#recentFiles .btn-icon:hover {
+  background: rgba(124, 93, 255, 0.2);
+  border-color: var(--accent);
+}
+
 @media (max-width: 600px) {
   .layout {
     grid-template-columns: 1fr;

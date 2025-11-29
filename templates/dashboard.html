@@ -470,48 +470,118 @@ async function loadSharedLinks() {
       return;
     }
     
-    sharedLinksList.innerHTML = shares.map(share => {
+    sharedLinksList.innerHTML = shares.map((share, index) => {
       const shareUrl = `${window.location.origin}/shared/${share.token}`;
+      // Parse the date string properly (API returns ISO format)
       const expiresAt = new Date(share.expires_at);
-      const isExpired = expiresAt < new Date();
+      const now = new Date();
+      // Compare properly - account for timezone issues
+      const isExpired = expiresAt.getTime() < now.getTime();
       const statusClass = isExpired ? 'expired' : 'active';
       const statusText = isExpired ? 'Expired' : 'Active';
       
+      // Format date nicely
+      const expiresStr = expiresAt.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
       return `
-        <div class="share-link-item ${statusClass}">
+        <div class="share-link-item ${statusClass}" data-share-index="${index}">
           <div class="share-link-info">
             <div class="share-link-url">
-              <strong>${shareUrl}</strong>
+              <strong>${escapeHtml(shareUrl)}</strong>
             </div>
             <p class="muted">
-              Expires: ${expiresAt.toLocaleString()} · 
+              Expires: ${expiresStr} · 
               Status: <span class="status-badge ${statusClass}">${statusText}</span>
             </p>
           </div>
           <div class="share-link-actions">
-            <button onclick="copyShareUrl('${shareUrl}')" class="btn secondary small">Copy</button>
+            <button class="btn secondary small copy-share-btn" data-url="${escapeHtml(shareUrl)}">Copy</button>
           </div>
         </div>
       `;
     }).join('');
+    
+    // Attach copy button handlers using event delegation
+    sharedLinksList.addEventListener('click', (e) => {
+      if (e.target.classList.contains('copy-share-btn')) {
+        const url = e.target.getAttribute('data-url');
+        copyShareUrl(url);
+      }
+    });
   } catch (error) {
     sharedLinksList.innerHTML = `<p class="error-message">Error loading shared links: ${error.message}</p>`;
   }
 }
 
 function copyShareUrl(url) {
-  navigator.clipboard.writeText(url).then(() => {
-    alert('Link copied to clipboard!');
-  }).catch(() => {
+  if (!url) return;
+  
+  // Try modern clipboard API first
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showCopyFeedback('Link copied to clipboard!');
+    }).catch(() => {
+      // Fallback for older browsers
+      fallbackCopy(url);
+    });
+  } else {
     // Fallback for older browsers
-    const input = document.createElement('input');
-    input.value = url;
-    document.body.appendChild(input);
-    input.select();
+    fallbackCopy(url);
+  }
+}
+
+function fallbackCopy(url) {
+  const input = document.createElement('input');
+  input.style.position = 'fixed';
+  input.style.opacity = '0';
+  input.value = url;
+  document.body.appendChild(input);
+  input.select();
+  input.setSelectionRange(0, 99999); // For mobile devices
+  
+  try {
     document.execCommand('copy');
-    document.body.removeChild(input);
-    alert('Link copied to clipboard!');
-  });
+    showCopyFeedback('Link copied to clipboard!');
+  } catch (err) {
+    showCopyFeedback('Failed to copy. Please copy manually: ' + url, true);
+  }
+  
+  document.body.removeChild(input);
+}
+
+function showCopyFeedback(message, isError = false) {
+  // Remove existing feedback if any
+  const existing = document.querySelector('.copy-feedback');
+  if (existing) existing.remove();
+  
+  const feedback = document.createElement('div');
+  feedback.className = `copy-feedback ${isError ? 'error' : 'success'}`;
+  feedback.textContent = message;
+  feedback.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${isError ? '#ff6b6b' : '#51cf66'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+  `;
+  
+  document.body.appendChild(feedback);
+  
+  setTimeout(() => {
+    feedback.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => feedback.remove(), 300);
+  }, 2000);
 }
 
 // Initialize view mode and active nav on page load

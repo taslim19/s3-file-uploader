@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="home-page">
 <section class="welcome-section">
   <div class="welcome-header">
     <h2>Welcome back, {{ user.full_name }}!</h2>
@@ -209,5 +210,6 @@ loadRecentFiles();
 loadShareCount();
 refreshUserStats();
 </script>
+</div>
 {% endblock %}
 
