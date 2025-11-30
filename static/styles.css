@@ -1918,6 +1918,18 @@ textarea {
   font-size: 1.3rem;
 }
 
+.download-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  width: 100%;
+}
+
+#downloadBtn {
+  min-width: 200px;
+}
+
 @media (max-width: 600px) {
   .layout {
     grid-template-columns: 1fr;
