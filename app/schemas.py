@@ -41,6 +41,9 @@ class FileRead(FileBase):
     id: int
     uploaded_at: datetime
     download_count: int
+    folder_id: int | None = None
+    is_trashed: bool = False
+    is_favorite: bool = False
 
     class Config:
         from_attributes = True
@@ -50,6 +53,32 @@ class ShareLinkRead(BaseModel):
     token: str
     expires_at: datetime
     file_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class FolderCreate(BaseModel):
+    name: str
+    parent_id: int | None = None
+
+
+class FolderRead(BaseModel):
+    id: int
+    name: str
+    parent_id: int | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ActivityLogRead(BaseModel):
+    id: int
+    action: str
+    file_id: int | None = None
+    details: str | None = None
+    created_at: datetime
 
     class Config:
         from_attributes = True

@@ -46,4 +46,15 @@ class S3StorageService:
 
     def delete(self, key: str) -> None:
         self.client.delete_object(Bucket=self.bucket, Key=key)
+    
+    def download(self, key: str) -> bytes:
+        """Download file content as bytes"""
+        import io
+        buffer = io.BytesIO()
+        try:
+            self.client.download_fileobj(Bucket=self.bucket, Key=key, Fileobj=buffer)
+            buffer.seek(0)
+            return buffer.read()
+        except Exception as e:
+            raise Exception(f"Failed to download file: {str(e)}")
 

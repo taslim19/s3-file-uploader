@@ -49,15 +49,61 @@
 <section class="glass-panel">
   <div class="files-header">
     <h3>My Files</h3>
-    <div class="view-toggle">
-      <button id="listViewBtn" class="view-btn active" onclick="setViewMode('list')" title="List view">
-        <span>☰</span>
+    <div class="files-header-actions">
+      <div class="view-toggle">
+        <button id="listViewBtn" class="view-btn active" onclick="setViewMode('list')" title="List view">
+          <span>☰</span>
+        </button>
+        <button id="gridViewBtn" class="view-btn" onclick="setViewMode('grid')" title="Grid view">
+          <span>⊞</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Search and Filters -->
+  <div class="search-filters-bar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search files..." class="search-input" />
+      <span class="search-icon">🔍</span>
+    </div>
+    <div class="filters-row">
+      <select id="fileTypeFilter" class="filter-select">
+        <option value="">All Types</option>
+        <option value="image">Images</option>
+        <option value="video">Videos</option>
+        <option value="audio">Audio</option>
+        <option value="document">Documents</option>
+        <option value="text">Text Files</option>
+      </select>
+      <select id="folderFilter" class="filter-select">
+        <option value="">All Folders</option>
+      </select>
+      <select id="sortFilter" class="filter-select">
+        <option value="date">Sort by Date</option>
+        <option value="name">Sort by Name</option>
+        <option value="size">Sort by Size</option>
+      </select>
+      <button id="favoritesFilter" class="btn secondary small" onclick="toggleFavoritesFilter()">
+        ⭐ Favorites
       </button>
-      <button id="gridViewBtn" class="view-btn" onclick="setViewMode('grid')" title="Grid view">
-        <span>⊞</span>
+      <button id="trashFilter" class="btn secondary small" onclick="toggleTrashFilter()">
+        🗑️ Trash
       </button>
     </div>
   </div>
+  
+  <!-- Bulk Actions Bar (hidden by default) -->
+  <div id="bulkActionsBar" class="bulk-actions-bar" style="display: none;">
+    <span id="selectedCount">0 files selected</span>
+    <div class="bulk-actions">
+      <button onclick="bulkDownload()" class="btn secondary small">⬇️ Download</button>
+      <button onclick="bulkDelete()" class="btn secondary small">🗑️ Delete</button>
+      <button onclick="bulkMove()" class="btn secondary small">📁 Move</button>
+      <button onclick="clearSelection()" class="btn secondary small">✕ Clear</button>
+    </div>
+  </div>
+  
   <div id="filesList" class="files-container list-view">
     <p class="muted">Loading files...</p>
   </div>
@@ -211,14 +257,33 @@ function showError(elementId, message) {
   errorDiv.style.display = 'block';
 }
 
-// Load files list
+// Global state
+let selectedFiles = new Set();
+let currentFilters = {
+  search: '',
+  fileType: '',
+  folderId: null,
+  favoriteOnly: false,
+  trashed: false,
+  sortBy: 'date'
+};
+
+// Load files list with filters
 async function loadFiles() {
   const filesList = document.getElementById('filesList');
   filesList.innerHTML = '<p class="muted">Loading files...</p>';
   
   try {
     const token = getToken();
-    const response = await fetch('/files/', {
+    const params = new URLSearchParams();
+    if (currentFilters.search) params.append('search', currentFilters.search);
+    if (currentFilters.fileType) params.append('file_type', currentFilters.fileType);
+    if (currentFilters.folderId) params.append('folder_id', currentFilters.folderId);
+    if (currentFilters.favoriteOnly) params.append('favorite_only', 'true');
+    if (currentFilters.trashed) params.append('trashed', 'true');
+    params.append('sort_by', currentFilters.sortBy);
+    
+    const response = await fetch(`/files/?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
@@ -229,12 +294,13 @@ async function loadFiles() {
     const files = await response.json();
     
     if (files.length === 0) {
-      filesList.innerHTML = '<p class="muted">No files uploaded yet. Upload your first file above!</p>';
+      filesList.innerHTML = '<p class="muted">No files found. Try adjusting your filters.</p>';
       return;
     }
     
     const viewMode = localStorage.getItem('viewMode') || 'list';
     renderFiles(files, viewMode);
+    updateBulkActionsBar();
   } catch (error) {
     filesList.innerHTML = `<p class="error-message">Error loading files: ${error.message}</p>`;
   }
@@ -418,14 +484,20 @@ function renderFiles(files, viewMode) {
   
   if (viewMode === 'grid') {
     filesList.innerHTML = files.map(file => `
-      <div class="file-card">
-        <div class="file-card-icon">📄</div>
+      <div class="file-card" data-file-id="${file.id}">
+        <div class="file-card-checkbox">
+          <input type="checkbox" class="file-checkbox" value="${file.id}" onchange="toggleFileSelection(${file.id})" ${selectedFiles.has(file.id) ? 'checked' : ''}>
+        </div>
+        <div class="file-card-icon">${getFileIcon(file.filename, file.content_type)}</div>
         <div class="file-card-name" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</div>
         <div class="file-card-meta">
           <span class="muted">${formatBytes(file.size)}</span>
+          ${file.is_favorite ? '<span class="favorite-badge">⭐</span>' : ''}
         </div>
         <div class="file-card-actions">
+          <button onclick="previewFile(${file.id})" class="btn-icon" title="Preview">👁️</button>
           <button onclick="downloadFile(${file.id})" class="btn-icon" title="Download">⬇️</button>
+          <button onclick="toggleFavorite(${file.id})" class="btn-icon" title="${file.is_favorite ? 'Unfavorite' : 'Favorite'}">${file.is_favorite ? '⭐' : '☆'}</button>
           <button onclick="shareFile(${file.id})" class="btn-icon" title="Share">🔗</button>
           <button onclick="deleteFile(${file.id}, '${escapeHtml(file.filename)}')" class="btn-icon danger" title="Delete">🗑️</button>
         </div>
@@ -433,19 +505,39 @@ function renderFiles(files, viewMode) {
     `).join('');
   } else {
     filesList.innerHTML = files.map(file => `
-      <div class="file-item">
+      <div class="file-item" data-file-id="${file.id}">
+        <div class="file-checkbox-col">
+          <input type="checkbox" class="file-checkbox" value="${file.id}" onchange="toggleFileSelection(${file.id})" ${selectedFiles.has(file.id) ? 'checked' : ''}>
+        </div>
         <div class="file-info">
-          <strong>${escapeHtml(file.filename)}</strong>
+          <div class="file-name-row">
+            <strong>${escapeHtml(file.filename)}</strong>
+            ${file.is_favorite ? '<span class="favorite-badge">⭐</span>' : ''}
+          </div>
           <p class="muted">${formatBytes(file.size)} · ${formatDate(file.uploaded_at)}</p>
         </div>
         <div class="file-actions">
+          <button onclick="previewFile(${file.id})" class="btn secondary small">Preview</button>
           <button onclick="downloadFile(${file.id})" class="btn secondary small">Download</button>
+          <button onclick="toggleFavorite(${file.id})" class="btn secondary small">${file.is_favorite ? '⭐' : '☆'}</button>
           <button onclick="shareFile(${file.id})" class="btn primary small">Share</button>
           <button onclick="deleteFile(${file.id}, '${escapeHtml(file.filename)}')" class="btn danger small">Delete</button>
         </div>
       </div>
     `).join('');
   }
+}
+
+function getFileIcon(filename, contentType) {
+  const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+  if (contentType && contentType.startsWith('image/')) return '🖼️';
+  if (contentType && contentType.startsWith('video/')) return '🎬';
+  if (contentType && contentType.startsWith('audio/')) return '🎵';
+  if (ext === '.pdf') return '📕';
+  if (['.doc', '.docx'].includes(ext)) return '📘';
+  if (['.xls', '.xlsx'].includes(ext)) return '📊';
+  if (['.zip', '.rar', '.7z'].includes(ext)) return '📦';
+  return '📄';
 }
 
 // Load shared links
@@ -621,8 +713,238 @@ document.addEventListener('DOMContentLoaded', () => {
   setViewMode(currentViewMode);
 });
 
+// Search and filter handlers
+document.getElementById('searchInput')?.addEventListener('input', (e) => {
+  currentFilters.search = e.target.value;
+  loadFiles();
+});
+
+document.getElementById('fileTypeFilter')?.addEventListener('change', (e) => {
+  currentFilters.fileType = e.target.value;
+  loadFiles();
+});
+
+document.getElementById('sortFilter')?.addEventListener('change', (e) => {
+  currentFilters.sortBy = e.target.value;
+  loadFiles();
+});
+
+function toggleFavoritesFilter() {
+  currentFilters.favoriteOnly = !currentFilters.favoriteOnly;
+  const btn = document.getElementById('favoritesFilter');
+  btn.classList.toggle('active', currentFilters.favoriteOnly);
+  loadFiles();
+}
+
+function toggleTrashFilter() {
+  currentFilters.trashed = !currentFilters.trashed;
+  const btn = document.getElementById('trashFilter');
+  btn.classList.toggle('active', currentFilters.trashed);
+  loadFiles();
+}
+
+// Bulk selection
+function toggleFileSelection(fileId) {
+  if (selectedFiles.has(fileId)) {
+    selectedFiles.delete(fileId);
+  } else {
+    selectedFiles.add(fileId);
+  }
+  updateBulkActionsBar();
+}
+
+function updateBulkActionsBar() {
+  const bar = document.getElementById('bulkActionsBar');
+  const count = document.getElementById('selectedCount');
+  if (selectedFiles.size > 0) {
+    bar.style.display = 'flex';
+    count.textContent = `${selectedFiles.size} file${selectedFiles.size > 1 ? 's' : ''} selected`;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function clearSelection() {
+  selectedFiles.clear();
+  document.querySelectorAll('.file-checkbox').forEach(cb => cb.checked = false);
+  updateBulkActionsBar();
+}
+
+async function bulkDownload() {
+  if (selectedFiles.size === 0) return;
+  
+  try {
+    const token = getToken();
+    const response = await fetch('/files/bulk/download', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(Array.from(selectedFiles))
+    });
+    
+    if (!response.ok) throw new Error('Download failed');
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'files.zip';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    clearSelection();
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+async function bulkDelete() {
+  if (selectedFiles.size === 0) return;
+  if (!confirm(`Delete ${selectedFiles.size} file(s)? They will be moved to trash.`)) return;
+  
+  try {
+    const token = getToken();
+    const response = await fetch('/files/bulk/delete', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(Array.from(selectedFiles))
+    });
+    
+    if (!response.ok) throw new Error('Delete failed');
+    
+    clearSelection();
+    loadFiles();
+    refreshUserStats();
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+function bulkMove() {
+  if (selectedFiles.size === 0) return;
+  // TODO: Show folder picker modal
+  alert('Folder picker coming soon!');
+}
+
+async function toggleFavorite(fileId) {
+  try {
+    const token = getToken();
+    const response = await fetch(`/files/${fileId}/favorite`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) throw new Error('Failed to toggle favorite');
+    
+    loadFiles();
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+async function previewFile(fileId) {
+  try {
+    const token = getToken();
+    const response = await fetch(`/files/${fileId}/preview`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) throw new Error('Failed to get preview');
+    
+    const data = await response.json();
+    
+    // Create preview modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 90vw; max-height: 90vh;">
+        <span class="modal-close" onclick="this.closest('.modal').remove()">&times;</span>
+        <h3>${escapeHtml(data.filename)}</h3>
+        <div class="preview-container">
+          ${data.content_type.startsWith('image/') ? 
+            `<img src="${data.url}" style="max-width: 100%; max-height: 70vh;" />` :
+            data.content_type.startsWith('video/') ?
+            `<video controls style="max-width: 100%; max-height: 70vh;"><source src="${data.url}" type="${data.content_type}"></video>` :
+            data.content_type.startsWith('audio/') ?
+            `<audio controls style="width: 100%;"><source src="${data.url}" type="${data.content_type}"></audio>` :
+            data.content_type === 'application/pdf' ?
+            `<iframe src="${data.url}" style="width: 100%; height: 70vh; border: none;"></iframe>` :
+            `<p class="muted">Preview not available for this file type.</p>
+             <a href="${data.url}" target="_blank" class="btn primary">Open in new tab</a>`
+          }
+        </div>
+        <div style="margin-top: 1rem;">
+          <a href="${data.url}" download="${data.filename}" class="btn primary">Download</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.onclick = (e) => {
+      if (e.target === modal) modal.remove();
+    };
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+// Load folders for filter dropdown
+async function loadFolders() {
+  try {
+    const token = getToken();
+    const response = await fetch('/folders/', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (response.ok) {
+      const folders = await response.json();
+      const select = document.getElementById('folderFilter');
+      if (select) {
+        select.innerHTML = '<option value="">All Folders</option>' +
+          folders.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+      }
+    }
+  } catch (error) {
+    // Ignore errors
+  }
+}
+
+// Update delete function to support trash
+async function deleteFile(fileId, filename) {
+  const isTrashed = currentFilters.trashed;
+  const action = isTrashed ? 'permanently delete' : 'move to trash';
+  
+  if (!confirm(`Are you sure you want to ${action} "${filename}"?`)) {
+    return;
+  }
+  
+  try {
+    const token = getToken();
+    const response = await fetch(`/files/${fileId}?permanent=${isTrashed}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to delete file');
+    }
+    
+    loadFiles();
+    refreshUserStats();
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
 loadFiles();
 loadSharedLinks();
+loadFolders();
 refreshUserStats();
 </script>
 {% endblock %}

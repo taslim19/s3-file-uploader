@@ -1,4 +1,4 @@
-from . import admin, files, users
+from . import admin, files, folders, users
 
-__all__ = ["admin", "files", "users"]
+__all__ = ["admin", "files", "folders", "users"]
 

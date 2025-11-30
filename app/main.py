@@ -6,12 +6,13 @@ from fastapi.templating import Jinja2Templates
 from app import models
 from app.auth import get_current_active_user, get_optional_user
 from app.database import Base, engine
-from app.routers import admin, files, users
+from app.routers import admin, files, folders, users
 
 app = FastAPI(title="Mini Cloud Drive")
 
 app.include_router(users.router)
 app.include_router(files.router)
+app.include_router(folders.router)
 app.include_router(admin.router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
